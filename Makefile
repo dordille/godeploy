@@ -3,7 +3,7 @@ NO_COLOR=\033[0m
 
 .PHONY: all
 
-all: clean format deps build archive
+all: clean format deps build
 
 build:
 	$(eval SHA := $(shell git rev-parse HEAD))
@@ -13,6 +13,17 @@ build:
 archive:
 	@echo "$(OK_COLOR)==> Building Tarball...$(NO_COLOR)"
 	tar -cvzf dist/godeploy.tar.gz config/production.ini config/staging.ini bin/godeploy
+
+upload:
+	$(eval SHA := $(shell git rev-parse HEAD))
+	$(eval BRANCH := $(shell git rev-parse --abbrev-ref HEAD))
+	aws s3api put-object \
+	--bucket godeploy \
+	--key builds/godeploy_${SHA}.tar.gz \
+	--body dist/godeploy.tar.gz  \
+	--metadata branch=${BRANCH},sha=${SHA}
+
+publish: archive upload
 
 clean:
 	@rm -rf bin/

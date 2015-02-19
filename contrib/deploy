@@ -8,26 +8,27 @@ def truncate(string, max)
 end
 
 s3 = AWS::S3.new
-$bucket = s3.buckets['put your bucket here']
+$bucket = s3.buckets['godeploy']
 
 def list_builds(opts)
   limit = opts[:limit] || 5
-  releases = $bucket.objects.with_prefix('releases/')
-  releases = releases.sort_by { |obj| obj.last_modified }.reverse
+  builds = $bucket.objects.with_prefix('builds/')
+  builds = builds.sort_by { |obj| obj.last_modified }.reverse
 
   printf "%-41s %-30s %s\n", "GIT SHA", "GIT BRANCH", "BUILD DATE"
-  releases.take(limit).each() do |obj|
-    sha = obj.key.gsub(/releases\/godeploy\.tar\.gz\./,'')
+  builds.take(limit).each() do |obj|
+    sha = obj.metadata.sha || ""
     branch = obj.metadata.branch || ""
+    next unless sha != ""
     printf "%-41s %-30s %s\n", sha, truncate(branch, 30), obj.last_modified
   end
 end
 
-def publish_build(opts)
+def tag_build(opts)
   sha = opts[:sha]
   tag = opts[:tag]
   to = $bucket.objects["tags/#{tag}.tar.gz"]
-  from = $bucket.objects["releases/godeploy.tar.gz.#{sha}"]
+  from = $bucket.objects["builds/godeploy_#{sha}.tar.gz"]
   if !from.exists?
     raise "No release for #{sha}"
   end
@@ -65,15 +66,15 @@ module Deploy
       get_current_sha options
     end
 
-    desc 'publish', 'Publishes a build to a tag'
+    desc 'tag', 'Tag a build'
     method_option 'sha', :required => true, :desc => 'SHA to publish'
     method_option 'tag', :required => true, :desc => 'Tag to publish build on'
-    def publish
-      obj = publish_build options
+    def tag
+      obj = tag_build options
       if obj.exists?
-        printf "Success!".green + " Published %s to %s.\n", options['sha'].cyan, options['tag'].cyan
+        printf "Success!".green + " Tagged %s to %s.\n", options['sha'].cyan, options['tag'].cyan
       else
-        printf "Failure!".red + " Could not publish %s to %s.\n", options['sha'].cyan, options['tag'].cyan
+        printf "Failure!".red + " Could not tag %s to %s.\n", options['sha'].cyan, options['tag'].cyan
         exit(1)
       end
     end

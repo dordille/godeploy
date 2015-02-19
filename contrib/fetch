@@ -1,0 +1,12 @@
+#!/bin/sh
+cd deployed
+if [ -f bin/godeploy ]; then
+	SHA=$(./bin/godeploy -gitversion)
+	echo $SHA
+	if aws s3api head-object --bucket godeploy --key tags/production.tar.gz | grep $SHA > /dev/null; then
+		echo "At Latest"
+    	exit 0
+	fi
+fi
+
+aws s3 cp s3://godeploy/tags/production.tar.gz ./godeploy.tar.gz && tar -xvzf ./godeploy.tar.gz
