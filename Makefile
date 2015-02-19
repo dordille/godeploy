@@ -23,7 +23,7 @@ upload:
 	--body dist/godeploy.tar.gz  \
 	--metadata branch=${BRANCH},sha=${SHA}
 
-publish: archive upload
+publish: all archive upload
 
 clean:
 	@rm -rf bin/
