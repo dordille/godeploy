@@ -7,6 +7,10 @@ Sample Application That Demonstrates How We Deploy @ Codecademy
  * AWS CLI Tools `pip install awscli`
  * AWS Account and access keys available as ENV Vars `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
  * An S3 Bucket
+ * Replace the `godeploy` bucket with your bucket in the following locations.
+   * [contrib/deploy](contrib/deploy#L11)
+   * [contrib/fetch](contrib/fetch#L2)
+   * [Makefile](Makefile#L21)
 
 ## Deployment
 ### make publish
